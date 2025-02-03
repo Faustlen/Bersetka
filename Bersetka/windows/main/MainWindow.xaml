@@ -97,12 +97,69 @@
 
             <!-- Вкладка "Регистрация поединка" -->
             <TabItem Header="Регистрация поединка">
-                <Grid Background="#333333">
-                    <TextBlock Text="Функционал в разработке..." FontSize="18"
-                               HorizontalAlignment="Center" VerticalAlignment="Center"
-                               Foreground="White"/>
+                <Grid Background="#333333" Margin="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <!-- Поисковые поля -->
+                        <RowDefinition Height="*"/>
+                        <!-- Списки участников (растягиваются) -->
+                        <RowDefinition Height="Auto"/>
+                        <!-- Поле уведомления -->
+                        <RowDefinition Height="Auto"/>
+                        <!-- Кнопки -->
+                    </Grid.RowDefinitions>
+
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Поле поиска (левый) -->
+                    <TextBox Name="txtSearchLeft" Grid.Row="0" Grid.Column="0"
+                 Width="200" Height="30" Margin="10"
+                 Background="#444444" Foreground="White" BorderBrush="Gray"
+                 TextChanged="txtSearchLeft_TextChanged"
+                 ToolTip="Поиск участника..."/>
+
+                    <!-- Поле поиска (правый) -->
+                    <TextBox Name="txtSearchRight" Grid.Row="0" Grid.Column="1"
+                 Width="200" Height="30" Margin="10"
+                 Background="#444444" Foreground="White" BorderBrush="Gray"
+                 TextChanged="txtSearchRight_TextChanged"
+                 ToolTip="Поиск участника..."/>
+
+                    <!-- Левый список -->
+                    <ListBox Name="listBoxLeft" Grid.Row="1" Grid.Column="0"
+                 Margin="10" Background="#222222" 
+                 Foreground="White" BorderBrush="Gray"
+                 SelectionMode="Single"/>
+
+                    <!-- Правый список -->
+                    <ListBox Name="listBoxRight" Grid.Row="1" Grid.Column="1"
+                 Margin="10" Background="#222222" 
+                 Foreground="White" BorderBrush="Gray"
+                 SelectionMode="Single"/>
+
+                    <!-- Поле уведомления -->
+                    <TextBlock Name="lblResultMessage" Grid.Row="2" Grid.ColumnSpan="2"
+                   HorizontalAlignment="Center" FontSize="16"
+                   Foreground="Transparent" Margin="10"/>
+
+                    <!-- Панель кнопок выше уведомления -->
+                    <StackPanel Grid.Row="3" Grid.ColumnSpan="2"
+                    Orientation="Horizontal" HorizontalAlignment="Center"
+                    Margin="0,10,0,0">
+                        <Button Content="Победа (Левый)" Width="150" Height="40" Margin="10"
+                    Click="btnWinLeft_Click" Background="#B25427" Foreground="White"/>
+                        <Button Content="Ничья" Width="150" Height="40" Margin="10"
+                    Click="btnDraw_Click" Background="Gray" Foreground="White"/>
+                        <Button Content="Победа (Правый)" Width="150" Height="40" Margin="10"
+                    Click="btnWinRight_Click" Background="#B25427" Foreground="White"/>
+                    </StackPanel>
                 </Grid>
             </TabItem>
+
+
 
         </TabControl>
     </Grid>

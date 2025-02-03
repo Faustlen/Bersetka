@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using Bersetka.windows.main.addUser;
 using Bersetka.windows.main.editUser;
 
@@ -14,12 +17,14 @@ namespace Bersetka.windows.main
     public partial class MainWindow : Window
     {
         private string connectionString = @"Data Source=.\DataBase\Bersetka.db;Version=3;";
+        private List<string> playersList = new List<string>();
 
         public MainWindow()
         {
             InitializeComponent();
             LoadData();
             SetupContextMenu();
+            LoadPlayers();
 
             LoadWindowSettings();
         }
@@ -272,5 +277,148 @@ namespace Bersetka.windows.main
             }
         }
 
+        // === 1. ЗАГРУЗКА ИГРОКОВ В СПИСКИ ===
+        private void LoadPlayers()
+        {
+            playersList.Clear();
+            using (SQLiteConnection connection = new SQLiteConnection(connectionString))
+            {
+                try
+                {
+                    connection.Open();
+                    string query = "SELECT Name FROM Players ORDER BY Name ASC";
+                    using (SQLiteCommand command = new SQLiteCommand(query, connection))
+                    {
+                        SQLiteDataReader reader = command.ExecuteReader();
+                        while (reader.Read())
+                        {
+                            playersList.Add(reader["Name"].ToString());
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Ошибка загрузки участников: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+
+            // Обновляем списки игроков
+            UpdatePlayerLists();
+        }
+
+        private void UpdatePlayerLists()
+        {
+            listBoxLeft.ItemsSource = playersList.ToList(); // Копия списка
+            listBoxRight.ItemsSource = playersList.ToList();
+        }
+
+        // === 2. ФИЛЬТРАЦИЯ ПОИСКА ===
+        private void txtSearchLeft_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            string search = txtSearchLeft.Text.ToLower();
+            listBoxLeft.ItemsSource = playersList.Where(p => p.ToLower().Contains(search)).ToList();
+        }
+
+        private void txtSearchRight_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            string search = txtSearchRight.Text.ToLower();
+            listBoxRight.ItemsSource = playersList.Where(p => p.ToLower().Contains(search)).ToList();
+        }
+
+        // === 3. ЛОГИКА КНОПОК "ПОБЕДА/НИЧЬЯ" ===
+        private void btnWinLeft_Click(object sender, RoutedEventArgs e)
+        {
+            if (ValidateSelection(out string leftPlayer, out string rightPlayer))
+            {
+                UpdateMatchResult(leftPlayer, rightPlayer, "left");
+            }
+        }
+
+        private void btnWinRight_Click(object sender, RoutedEventArgs e)
+        {
+            if (ValidateSelection(out string leftPlayer, out string rightPlayer))
+            {
+                UpdateMatchResult(leftPlayer, rightPlayer, "right");
+            }
+        }
+
+        private void btnDraw_Click(object sender, RoutedEventArgs e)
+        {
+            if (ValidateSelection(out string leftPlayer, out string rightPlayer))
+            {
+                UpdateMatchResult(leftPlayer, rightPlayer, "draw");
+            }
+        }
+
+        // === 4. ВАЛИДАЦИЯ ВЫБОРА ===
+        private bool ValidateSelection(out string leftPlayer, out string rightPlayer)
+        {
+            leftPlayer = listBoxLeft.SelectedItem as string;
+            rightPlayer = listBoxRight.SelectedItem as string;
+
+            if (leftPlayer == null || rightPlayer == null)
+            {
+                ShowResultMessage("Выберите обоих участников!", success: false);
+                return false;
+            }
+
+            if (leftPlayer == rightPlayer)
+            {
+                ShowResultMessage("Нельзя выбрать одного и того же игрока!", success: false);
+                return false;
+            }
+
+            return true;
+        }
+
+        // === 5. ОБНОВЛЕНИЕ РЕЗУЛЬТАТОВ В БАЗЕ ===
+        private void UpdateMatchResult(string leftPlayer, string rightPlayer, string result)
+        {
+            using (SQLiteConnection connection = new SQLiteConnection(connectionString))
+            {
+                try
+                {
+                    connection.Open();
+                    string query = "";
+
+                    switch (result)
+                    {
+                        case "left":
+                            query = "UPDATE Players SET Wins = Wins + 1 WHERE Name = @LeftPlayer; " +
+                                    "UPDATE Players SET Losses = Losses + 1 WHERE Name = @RightPlayer;";
+                            break;
+                        case "right":
+                            query = "UPDATE Players SET Wins = Wins + 1 WHERE Name = @RightPlayer; " +
+                                    "UPDATE Players SET Losses = Losses + 1 WHERE Name = @LeftPlayer;";
+                            break;
+                        case "draw":
+                            query = "UPDATE Players SET Draws = Draws + 1 WHERE Name = @LeftPlayer OR Name = @RightPlayer;";
+                            break;
+                    }
+
+                    using (SQLiteCommand command = new SQLiteCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@LeftPlayer", leftPlayer);
+                        command.Parameters.AddWithValue("@RightPlayer", rightPlayer);
+                        command.ExecuteNonQuery();
+                    }
+
+                    ShowResultMessage($"Результат записан: {leftPlayer} vs {rightPlayer}", success: true);
+                }
+                catch (Exception ex)
+                {
+                    ShowResultMessage($"Ошибка: {ex.Message}", success: false);
+                }
+            }
+
+            LoadPlayers(); // Обновляем списки
+        }
+
+        // Метод для отображения уведомления
+        private void ShowResultMessage(string message, bool success)
+        {
+            lblResultMessage.Text = message;
+            lblResultMessage.Foreground = success ? Brushes.Orange : Brushes.Red;
+        }
     }
 }
