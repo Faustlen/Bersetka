@@ -76,19 +76,71 @@
                               VerticalGridLinesBrush="Gray">
 
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Имя" Binding="{Binding Name}" Width="*"/>
-                            <DataGridTextColumn Header="Очки" Binding="{Binding Score}" Width="100"/>
-                            <DataGridTextColumn Header="Победы" Binding="{Binding Wins}" Width="100"/>
-                            <DataGridTextColumn Header="Поражения" Binding="{Binding Losses}" Width="100"/>
-                            <DataGridTextColumn Header="Ничьи" Binding="{Binding Draws}" Width="100"/>
+                            <DataGridTextColumn Header=" Имя" Binding="{Binding Name}" Width="*"/>
+                            <DataGridTextColumn Header=" Очки" Binding="{Binding Score}" Width="110"/>
+                            <DataGridTextColumn Header=" Победы" Binding="{Binding Wins}" Width="110"/>
+                            <DataGridTextColumn Header=" Поражения" Binding="{Binding Losses}" Width="110"/>
+                            <DataGridTextColumn Header=" Ничьи" Binding="{Binding Draws}" Width="110"/>
                         </DataGrid.Columns>
 
                         <DataGrid.Resources>
+                            <!-- Стилизация заголовков -->
                             <Style TargetType="DataGridColumnHeader">
                                 <Setter Property="Background" Value="#B25427"/>
                                 <Setter Property="Foreground" Value="White"/>
                                 <Setter Property="FontSize" Value="16"/>
                                 <Setter Property="BorderBrush" Value="Gray"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="DataGridColumnHeader">
+                                            <Grid>
+                                                <Border Background="{TemplateBinding Background}" 
+                                    BorderBrush="{TemplateBinding BorderBrush}" 
+                                    BorderThickness="1">
+                                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                                                        <ContentPresenter/>
+                                                        <TextBlock Name="sortIndicator" Text="" Margin="0,0,0,0"/>
+                                                    </StackPanel>
+                                                </Border>
+                                            </Grid>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="SortDirection" Value="Ascending">
+                                                    <Setter TargetName="sortIndicator" Property="Text" Value="▲"/>
+                                                </Trigger>
+                                                <Trigger Property="SortDirection" Value="Descending">
+                                                    <Setter TargetName="sortIndicator" Property="Text" Value="▼"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+
+                            <!-- Стиль выделенной строки -->
+                            <Style TargetType="DataGridRow">
+                                <Setter Property="Background" Value="#333333"/>
+                                <Setter Property="Foreground" Value="White"/>
+                                <Setter Property="FontSize" Value="16"/>
+                                <Setter Property="BorderBrush" Value="#333333"/>
+                                <Style.Triggers>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter Property="Background" Value="#222222"/>
+                                        <!-- Тёмно-серый -->
+                                        <Setter Property="Foreground" Value="White"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+
+                            <!-- Стиль выделенной ячейки -->
+                            <Style TargetType="DataGridCell">
+                                <Setter Property="BorderBrush" Value="#333333"/>
+                                <Style.Triggers>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter Property="Background" Value="#222222"/>
+                                        <!-- Тёмно-серый -->
+                                        <Setter Property="Foreground" Value="White"/>
+                                    </Trigger>
+                                </Style.Triggers>
                             </Style>
                         </DataGrid.Resources>
                     </DataGrid>
@@ -158,9 +210,6 @@
                     </StackPanel>
                 </Grid>
             </TabItem>
-
-
-
         </TabControl>
     </Grid>
 </Window>

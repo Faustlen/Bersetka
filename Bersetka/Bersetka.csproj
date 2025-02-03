@@ -8,6 +8,7 @@
     <ProjectGuid>{86AEA8CC-A7C3-44F7-B08C-AB5CC5CCC871}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <RootNamespace>Bersetka</RootNamespace>
+	<LangVersion>8.0</LangVersion>
     <AssemblyName>Bersetka</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -74,12 +75,16 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="helpers\DatabaseHelper.cs" />
+    <Compile Include="helpers\PlayerSerchHelper.cs" />
+    <Compile Include="helpers\UIMangaer.cs" />
     <Compile Include="windows\main\editUser\EditUserWindow.xaml.cs">
       <DependentUpon>EditUserWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="windows\main\MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="managers\MatchManager.cs" />
     <Page Include="windows\main\addUser\AddUserWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
