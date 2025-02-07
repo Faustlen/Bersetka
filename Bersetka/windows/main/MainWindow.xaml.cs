@@ -13,15 +13,17 @@ namespace Bersetka.windows.main
     public partial class MainWindow : Window
     {
         private List<string> playersList = new List<string>();
+        private string selectedLeftPlayer;
+        private string selectedRightPlayer;
+        private string winner; // "left", "right", null (ничья)
 
         public MainWindow()
         {
             InitializeComponent();
             LoadPlayers();
             LoadData();
-            SetupContextMenu(); // Устанавливаем контекстное меню при запуске
+            SetupContextMenu();
         }
-
 
         private void SetupContextMenu()
         {
@@ -50,7 +52,7 @@ namespace Bersetka.windows.main
             if (addUserWindow.ShowDialog() == true)
             {
                 DatabaseHelper.AddUserToDatabase(addUserWindow.UserName);
-                LoadData(); // Обновляем таблицу после добавления
+                LoadData();
                 LoadPlayers();
             }
         }
@@ -70,12 +72,9 @@ namespace Bersetka.windows.main
                 if (editUserWindow.ShowDialog() == true)
                 {
                     DatabaseHelper.UpdateUserInDatabase(currentName, editUserWindow.UserName, editUserWindow.Score, editUserWindow.Wins, editUserWindow.Losses, editUserWindow.Draws);
-                    LoadData(); // Обновляем таблицу после редактирования
+                    LoadData();
                     LoadPlayers();
                 }
-            }
-            else
-            {
             }
         }
 
@@ -94,22 +93,17 @@ namespace Bersetka.windows.main
                 if (result == MessageBoxResult.Yes)
                 {
                     DatabaseHelper.DeleteUserFromDatabase(userName);
-                    LoadData(); // Обновляем таблицу после удаления
+                    LoadData();
                     LoadPlayers();
                 }
             }
-            else
-            {
-            }
         }
-
 
         private void LoadData()
         {
             UIManager.UpdateDataGrid(dataGridPlayers, DatabaseHelper.GetPlayers());
-            SetupContextMenu(); // Добавляем контекстное меню после загрузки данных
+            SetupContextMenu();
         }
-
 
         private void LoadPlayers()
         {
@@ -127,22 +121,91 @@ namespace Bersetka.windows.main
         private void txtSearchRight_TextChanged(object sender, TextChangedEventArgs e) =>
             PlayerSearchHelper.FilterPlayers(txtSearchRight, listBoxRight, playersList);
 
+        private void listBoxLeft_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            selectedLeftPlayer = listBoxLeft.SelectedItem as string;
+            btnWinLeft.Content = selectedLeftPlayer ?? "Выберите участника";
+        }
+
+        private void listBoxRight_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            selectedRightPlayer = listBoxRight.SelectedItem as string;
+            btnWinRight.Content = selectedRightPlayer ?? "Выберите участника";
+        }
+
         private void btnWinLeft_Click(object sender, RoutedEventArgs e)
         {
-            MatchManager.RegisterMatch(listBoxLeft.SelectedItem as string, listBoxRight.SelectedItem as string, "left", lblResultMessage);
-            LoadData();
+            if (ValidateSelection())
+            {
+                winner = "left";
+                lblLeftCrown.Text = "👑";
+                lblRightCrown.Text = "";
+            }
         }
 
         private void btnWinRight_Click(object sender, RoutedEventArgs e)
         {
-            MatchManager.RegisterMatch(listBoxLeft.SelectedItem as string, listBoxRight.SelectedItem as string, "right", lblResultMessage);
-            LoadData();
+            if (ValidateSelection())
+            {
+                winner = "right";
+                lblRightCrown.Text = "👑";
+                lblLeftCrown.Text = "";
+            }
         }
 
         private void btnDraw_Click(object sender, RoutedEventArgs e)
         {
-            MatchManager.RegisterMatch(listBoxLeft.SelectedItem as string, listBoxRight.SelectedItem as string, "draw", lblResultMessage);
-            LoadData();
+            winner = null;
+            lblLeftCrown.Text = "";
+            lblRightCrown.Text = "";
+        }
+
+        private void btnSubmitMatch_Click(object sender, RoutedEventArgs e)
+        {
+            if (!ValidateSelection()) return;
+
+            string matchResult = winner switch
+            {
+                "left" => "left",
+                "right" => "right",
+                _ => "draw"
+            };
+
+            MatchManager.RegisterMatch(selectedLeftPlayer, selectedRightPlayer, matchResult, lblResultMessage);
+
+            ResetMatchSelection();
+        }
+
+        private bool ValidateSelection()
+        {
+            if (string.IsNullOrEmpty(selectedLeftPlayer) || string.IsNullOrEmpty(selectedRightPlayer))
+            {
+                ShowResultMessage("Выберите обоих участников!", false);
+                return false;
+            }
+
+            return true;
+        }
+
+        private void ResetMatchSelection()
+        {
+            listBoxLeft.SelectedItem = null;
+            listBoxRight.SelectedItem = null;
+            selectedLeftPlayer = null;
+            selectedRightPlayer = null;
+            btnWinLeft.Content = "Выберите участника";
+            btnWinRight.Content = "Выберите участника";
+            lblLeftCrown.Text = "";
+            lblRightCrown.Text = "";
+            txtSearchLeft.Text = "";
+            txtSearchRight.Text = "";
+            winner = null;
+        }
+
+        private void ShowResultMessage(string message, bool success)
+        {
+            lblResultMessage.Text = message;
+            lblResultMessage.Foreground = success ? System.Windows.Media.Brushes.LimeGreen : System.Windows.Media.Brushes.Red;
         }
     }
 }

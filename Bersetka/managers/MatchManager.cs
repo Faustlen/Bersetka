@@ -65,15 +65,22 @@ namespace Bersetka.managers
         private static int CalculateWinRating(int winnerRating, int loserRating)
         {
             int baseRating = 20;
-            int ratingDifference = Math.Abs(winnerRating - loserRating);
-            return baseRating + (ratingDifference / 25);
+            int ratingDifference = loserRating - winnerRating; // Теперь смотрим разницу правильно
+
+            // Если победитель был слабее, он получает БОЛЬШЕ
+            int bonus = ratingDifference / 25;
+            return baseRating + Math.Max(bonus, 0); // Убедимся, что не уменьшаем рейтинг за победу
         }
 
         private static int CalculateDrawRating(int rating1, int rating2)
         {
-            int ratingDifference = Math.Abs(rating1 - rating2);
-            return ratingDifference / 25; // +1 или -1 за каждые 25 рейтинга разницы
+            int ratingDifference = rating1 - rating2;
+
+            // Слабый игрок получает больше за ничью
+            int adjustment = ratingDifference / 25;
+            return -adjustment; // Уменьшаем у сильного, увеличиваем у слабого
         }
+
 
         private static void UpdateMatchStats(string leftPlayer, string rightPlayer, int leftRatingChange, int rightRatingChange, string result)
         {
@@ -82,12 +89,12 @@ namespace Bersetka.managers
                 connection.Open();
                 string query = result switch
                 {
-                    "left" => "UPDATE Players SET Wins = Wins + 1, Score = Score + @LeftRatingChange WHERE Name = @LeftPlayer; " +
-                              "UPDATE Players SET Losses = Losses + 1, Score = Score + @RightRatingChange WHERE Name = @RightPlayer;",
-                    "right" => "UPDATE Players SET Wins = Wins + 1, Score = Score + @RightRatingChange WHERE Name = @RightPlayer; " +
-                               "UPDATE Players SET Losses = Losses + 1, Score = Score + @LeftRatingChange WHERE Name = @LeftPlayer;",
-                    "draw" => "UPDATE Players SET Draws = Draws + 1, Score = Score + @LeftRatingChange WHERE Name = @LeftPlayer; " +
-                              "UPDATE Players SET Draws = Draws + 1, Score = Score + @RightRatingChange WHERE Name = @RightPlayer;",
+                    "left" => "UPDATE Players SET Wins = Wins + 1, Score = MAX(0, Score + @LeftRatingChange) WHERE Name = @LeftPlayer; " +
+                              "UPDATE Players SET Losses = Losses + 1, Score = MAX(0, Score + @RightRatingChange) WHERE Name = @RightPlayer;",
+                    "right" => "UPDATE Players SET Wins = Wins + 1, Score = MAX(0, Score + @RightRatingChange) WHERE Name = @RightPlayer; " +
+                               "UPDATE Players SET Losses = Losses + 1, Score = MAX(0, Score + @LeftRatingChange) WHERE Name = @LeftPlayer;",
+                    "draw" => "UPDATE Players SET Draws = Draws + 1, Score = MAX(0, Score + @LeftRatingChange) WHERE Name = @LeftPlayer; " +
+                              "UPDATE Players SET Draws = Draws + 1, Score = MAX(0, Score + @RightRatingChange) WHERE Name = @RightPlayer;",
                     _ => throw new ArgumentException("Неверный результат матча")
                 };
 
